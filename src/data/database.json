@@ -1,0 +1,169 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "João Silva",
+      "email": "joao@exemplo.com",
+      "password": "123456",
+      "avatar": "https://via.placeholder.com/40",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "role": "admin"
+    }
+  ],
+  "projects": [
+    {
+      "id": "1",
+      "name": "Mimir Wiki",
+      "description": "Plataforma de documentação para projetos de desenvolvimento",
+      "language": "TypeScript",
+      "framework": "React",
+      "dependencies": {
+        "npm": [
+          "react@18.2.0",
+          "typescript@4.9.0",
+          "styled-components@5.3.9",
+          "react-router-dom@6.8.0"
+        ],
+        "java": []
+      },
+      "repository": "https://github.com/exemplo/mimir-wiki",
+      "status": "active",
+      "authorId": "1",
+      "createdAt": "2024-01-15T00:00:00.000Z",
+      "updatedAt": "2024-01-20T00:00:00.000Z",
+      "isPublic": true,
+      "likes": 12,
+      "views": 156
+    },
+    {
+      "id": "2",
+      "name": "API REST",
+      "description": "API RESTful para sistema de e-commerce",
+      "language": "JavaScript",
+      "framework": "Node.js",
+      "dependencies": {
+        "npm": [
+          "express@4.18.0",
+          "mongoose@7.0.0",
+          "jsonwebtoken@9.0.0",
+          "bcryptjs@2.4.3"
+        ],
+        "java": []
+      },
+      "repository": "https://github.com/exemplo/api-rest",
+      "status": "active",
+      "authorId": "1",
+      "createdAt": "2024-01-10T00:00:00.000Z",
+      "updatedAt": "2024-01-18T00:00:00.000Z",
+      "isPublic": true,
+      "likes": 8,
+      "views": 89
+    }
+  ],
+  "wikiEntries": [
+    {
+      "id": "1",
+      "title": "Como configurar React com TypeScript",
+      "content": "Guia completo para configurar um projeto React com TypeScript, incluindo configuração do webpack, ESLint e Prettier...",
+      "category": "Frontend",
+      "tags": ["react", "typescript", "webpack"],
+      "authorId": "1",
+      "projectId": "1",
+      "createdAt": "2024-01-15T00:00:00.000Z",
+      "updatedAt": "2024-01-20T00:00:00.000Z",
+      "isPublic": true,
+      "likes": 15,
+      "views": 234
+    },
+    {
+      "id": "2",
+      "title": "Padrões de API REST",
+      "content": "Melhores práticas para design de APIs RESTful, incluindo convenções de nomenclatura, códigos de status HTTP e versionamento...",
+      "category": "Backend",
+      "tags": ["api", "rest", "http"],
+      "authorId": "1",
+      "projectId": "2",
+      "createdAt": "2024-01-10T00:00:00.000Z",
+      "updatedAt": "2024-01-18T00:00:00.000Z",
+      "isPublic": true,
+      "likes": 22,
+      "views": 189
+    }
+  ],
+  "notes": [
+    {
+      "id": "1",
+      "title": "Bug no sistema de autenticação",
+      "content": "Encontrei um bug na validação de tokens JWT. O problema está na função verifyToken...",
+      "projectId": "2",
+      "authorId": "1",
+      "createdAt": "2024-01-19T00:00:00.000Z",
+      "updatedAt": "2024-01-19T00:00:00.000Z",
+      "type": "bug",
+      "priority": "high"
+    },
+    {
+      "id": "2",
+      "title": "Melhoria na performance",
+      "content": "Implementei cache Redis para melhorar a performance das consultas ao banco...",
+      "projectId": "1",
+      "authorId": "1",
+      "createdAt": "2024-01-17T00:00:00.000Z",
+      "updatedAt": "2024-01-17T00:00:00.000Z",
+      "type": "improvement",
+      "priority": "medium"
+    }
+  ],
+  "comments": [
+    {
+      "id": "1",
+      "content": "Excelente documentação! Muito útil para iniciantes.",
+      "authorId": "1",
+      "wikiEntryId": "1",
+      "projectId": null,
+      "noteId": null,
+      "createdAt": "2024-01-21T00:00:00.000Z",
+      "likes": 3
+    },
+    {
+      "id": "2",
+      "content": "Adicionei mais exemplos práticos na seção de configuração.",
+      "authorId": "1",
+      "wikiEntryId": "1",
+      "projectId": null,
+      "noteId": null,
+      "createdAt": "2024-01-22T00:00:00.000Z",
+      "likes": 1
+    }
+  ],
+  "sqlScripts": [
+    {
+      "id": "1",
+      "name": "Criação das tabelas de usuários",
+      "description": "Script SQL para criar as tabelas do sistema de usuários",
+      "content": "CREATE TABLE users (\n  id SERIAL PRIMARY KEY,\n  name VARCHAR(255) NOT NULL,\n  email VARCHAR(255) UNIQUE NOT NULL,\n  password_hash VARCHAR(255) NOT NULL,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);",
+      "projectId": "2",
+      "authorId": "1",
+      "createdAt": "2024-01-15T00:00:00.000Z",
+      "updatedAt": "2024-01-15T00:00:00.000Z",
+      "database": "PostgreSQL",
+      "version": "13"
+    }
+  ],
+  "likes": [
+    {
+      "id": "1",
+      "userId": "1",
+      "targetType": "wikiEntry",
+      "targetId": "1",
+      "createdAt": "2024-01-20T00:00:00.000Z"
+    },
+    {
+      "id": "2",
+      "userId": "1",
+      "targetType": "project",
+      "targetId": "1",
+      "createdAt": "2024-01-19T00:00:00.000Z"
+    }
+  ]
+}
