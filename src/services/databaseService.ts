@@ -14,7 +14,13 @@ class LocalDatabaseService implements DatabaseService {
   }
 
   private saveToLocalStorage() {
-    localStorage.setItem('mimir_database', JSON.stringify(this.data));
+    console.log("Saving to localStorage:", this.data);
+    try {
+      localStorage.setItem('mimir_database', JSON.stringify(this.data));
+      console.log("Successfully saved to localStorage");
+    } catch (error) {
+      console.error("Error saving to localStorage:", error);
+    }
   }
 
   private loadFromLocalStorage() {
@@ -38,12 +44,15 @@ class LocalDatabaseService implements DatabaseService {
   }
 
   async createUser(user: Omit<User, 'id'>): Promise<User> {
+    console.log("databaseService.createUser called with:", user);
     const newUser: User = {
       ...user,
       id: this.generateId(),
     };
+    console.log("Created new user:", newUser);
     this.data.users.push(newUser);
     this.saveToLocalStorage();
+    console.log("User saved to database");
     return newUser;
   }
 

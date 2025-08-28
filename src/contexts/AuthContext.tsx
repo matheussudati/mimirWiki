@@ -1,7 +1,13 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, LoginCredentials, RegisterCredentials, AuthContextType } from '../types';
-import { databaseService } from '../services/databaseService';
-import { useToast } from '../hooks/useToast';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import {
+  User,
+  LoginCredentials,
+  RegisterCredentials,
+  AuthContextType,
+} from "../types";
+import { databaseService } from "../services/databaseService";
+import { useToast } from "../hooks/useToast";
+import { ToastContainer } from "../components/ui/ToastContainer";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -19,7 +25,7 @@ const loginAttempts: Map<string, LoginAttempt> = new Map();
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -31,33 +37,40 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const { success, error: showError, warning, info } = useToast();
+  const {
+    toasts,
+    removeToast,
+    success,
+    error: showError,
+    warning,
+    info,
+  } = useToast();
 
   useEffect(() => {
     // Verificar se há usuário salvo no localStorage
     const checkStoredUser = () => {
-      const storedUser = localStorage.getItem('user');
-      const rememberMe = localStorage.getItem('rememberMe') === 'true';
-      const sessionUser = sessionStorage.getItem('user');
-      
+      const storedUser = localStorage.getItem("user");
+      const rememberMe = localStorage.getItem("rememberMe") === "true";
+      const sessionUser = sessionStorage.getItem("user");
+
       if (storedUser && rememberMe) {
         try {
           const userData = JSON.parse(storedUser);
           setUser(userData);
-          info('Bem-vindo de volta!', `Conectado como ${userData.name}`);
+          info("Bem-vindo de volta!", `Conectado como ${userData.name}`);
         } catch {
-          localStorage.removeItem('user');
-          localStorage.removeItem('rememberMe');
+          localStorage.removeItem("user");
+          localStorage.removeItem("rememberMe");
         }
       } else if (sessionUser) {
         try {
           const userData = JSON.parse(sessionUser);
           setUser(userData);
         } catch {
-          sessionStorage.removeItem('user');
+          sessionStorage.removeItem("user");
         }
       }
-      
+
       setLoading(false);
     };
 
@@ -65,7 +78,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [info]);
 
   // Verificar se o email está bloqueado
-  const checkIfBlocked = (email: string): { isBlocked: boolean; minutesRemaining?: number } => {
+  const checkIfBlocked = (
+    email: string
+  ): { isBlocked: boolean; minutesRemaining?: number } => {
     const attempt = loginAttempts.get(email);
     if (!attempt || !attempt.blockedUntil) {
       return { isBlocked: false };
@@ -73,7 +88,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const now = new Date();
     if (attempt.blockedUntil > now) {
-      const minutesRemaining = Math.ceil((attempt.blockedUntil.getTime() - now.getTime()) / (1000 * 60));
+      const minutesRemaining = Math.ceil(
+        (attempt.blockedUntil.getTime() - now.getTime()) / (1000 * 60)
+      );
       return { isBlocked: true, minutesRemaining };
     }
 
@@ -108,26 +125,49 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (attempt.attempts >= 5) {
         const blockedUntil = new Date(now.getTime() + 30 * 60 * 1000); // 30 minutos
         attempt.blockedUntil = blockedUntil;
-        warning('Conta Bloqueada', 'Muitas tentativas falhadas. Tente novamente em 30 minutos.');
+        warning(
+          "Conta Bloqueada",
+          "Muitas tentativas falhadas. Tente novamente em 30 minutos."
+        );
       } else if (attempt.attempts >= 3) {
-        warning('Atenção', `${5 - attempt.attempts} tentativas restantes antes do bloqueio.`);
+        warning(
+          "Atenção",
+          `${5 - attempt.attempts} tentativas restantes antes do bloqueio.`
+        );
       }
     }
   };
 
   // Validar força da senha
-  const validatePasswordStrength = (password: string): { isValid: boolean; message?: string } => {
-    if (password.length < 6) {
-      return { isValid: false, message: 'A senha deve ter pelo menos 6 caracteres' };
+  const validatePasswordStrength = (
+    password: string
+  ): { isValid: boolean; message?: string } => {
+    if (password.length < 8) {
+      return {
+        isValid: false,
+        message: "A senha deve ter pelo menos 8 caracteres",
+      };
     }
     if (!/[a-z]/.test(password)) {
-      return { isValid: false, message: 'A senha deve conter letras minúsculas' };
+      return {
+        isValid: false,
+        message: "A senha deve conter letras minúsculas",
+      };
     }
     if (!/[A-Z]/.test(password)) {
-      return { isValid: false, message: 'A senha deve conter letras maiúsculas' };
+      return {
+        isValid: false,
+        message: "A senha deve conter letras maiúsculas",
+      };
     }
     if (!/\d/.test(password)) {
-      return { isValid: false, message: 'A senha deve conter números' };
+      return { isValid: false, message: "A senha deve conter números" };
+    }
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+      return {
+        isValid: false,
+        message: "A senha deve conter um caractere especial",
+      };
     }
     return { isValid: true };
   };
@@ -138,59 +178,69 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return emailRegex.test(email);
   };
 
-  const login = async (credentials: LoginCredentials & { rememberMe?: boolean }) => {
+  const login = async (
+    credentials: LoginCredentials & { rememberMe?: boolean }
+  ) => {
     try {
       setLoading(true);
-      
+
       // Validar formato do email
       if (!validateEmail(credentials.email)) {
-        showError('Email Inválido', 'Por favor, digite um email válido.');
-        throw new Error('Formato de email inválido');
+        showError("Email Inválido", "Por favor, digite um email válido.");
+        throw new Error("Formato de email inválido");
       }
 
       // Verificar se a conta está bloqueada
       const blockStatus = checkIfBlocked(credentials.email);
       if (blockStatus.isBlocked) {
         showError(
-          'Conta Bloqueada', 
+          "Conta Bloqueada",
           `Muitas tentativas falhadas. Tente novamente em ${blockStatus.minutesRemaining} minutos.`
         );
-        throw new Error('Usuário bloqueado');
+        throw new Error("Usuário bloqueado");
       }
 
       // Buscar usuário no banco de dados
       const users = await databaseService.getUsers();
-      const user = users.find(u => u.email.toLowerCase() === credentials.email.toLowerCase());
-      
+      const user = users.find(
+        (u) => u.email.toLowerCase() === credentials.email.toLowerCase()
+      );
+
       if (!user) {
         registerLoginAttempt(credentials.email, false);
-        showError('Email Não Encontrado', 'Este email não está cadastrado no sistema.');
-        throw new Error('Email não encontrado');
+        showError(
+          "Email Não Encontrado",
+          "Este email não está cadastrado no sistema."
+        );
+        throw new Error("Email não encontrado");
       }
 
       // Verificar senha
       if (user.password !== credentials.password) {
         registerLoginAttempt(credentials.email, false);
-        showError('Senha Incorreta', 'A senha informada está incorreta. Tente novamente.');
-        throw new Error('Senha incorreta');
+        showError(
+          "Senha Incorreta",
+          "A senha informada está incorreta. Tente novamente."
+        );
+        throw new Error("Senha incorreta");
       }
 
       // Login bem-sucedido
       registerLoginAttempt(credentials.email, true);
       const { password, ...userWithoutPassword } = user;
       setUser(userWithoutPassword);
-      
+
       // Salvar de acordo com a preferência
       if (credentials.rememberMe) {
-        localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-        localStorage.setItem('rememberMe', 'true');
+        localStorage.setItem("user", JSON.stringify(userWithoutPassword));
+        localStorage.setItem("rememberMe", "true");
       } else {
-        sessionStorage.setItem('user', JSON.stringify(userWithoutPassword));
-        localStorage.removeItem('rememberMe');
+        sessionStorage.setItem("user", JSON.stringify(userWithoutPassword));
+        localStorage.removeItem("rememberMe");
       }
-      
-      success('Login Realizado', `Bem-vindo de volta, ${user.name}!`);
-      
+
+      success("Login Realizado", `Bem-vindo de volta, ${user.name}!`);
+
       return { success: true };
     } catch (error) {
       throw error;
@@ -200,41 +250,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const register = async (credentials: RegisterCredentials) => {
+    console.log("AuthContext.register called with:", credentials);
     try {
+      console.log("Setting loading to true");
       setLoading(true);
-      
+
       // Validar formato do email
       if (!validateEmail(credentials.email)) {
-        showError('Email Inválido', 'Por favor, digite um email válido.');
-        throw new Error('Formato de email inválido');
+        showError("Email Inválido", "Por favor, digite um email válido.");
+        throw new Error("Formato de email inválido");
       }
 
       // Validar força da senha
       const passwordValidation = validatePasswordStrength(credentials.password);
       if (!passwordValidation.isValid) {
-        showError('Senha Fraca', passwordValidation.message!);
+        showError("Senha Fraca", passwordValidation.message!);
         throw new Error(passwordValidation.message);
       }
 
       // Verificar se as senhas coincidem
       if (credentials.password !== credentials.confirmPassword) {
-        showError('Senhas Diferentes', 'As senhas digitadas não coincidem.');
-        throw new Error('Senhas não coincidem');
+        showError("Senhas Diferentes", "As senhas digitadas não coincidem.");
+        throw new Error("Senhas não coincidem");
       }
 
       // Verificar se o email já existe
       const users = await databaseService.getUsers();
-      const existingUser = users.find(u => u.email.toLowerCase() === credentials.email.toLowerCase());
-      
+      const existingUser = users.find(
+        (u) => u.email.toLowerCase() === credentials.email.toLowerCase()
+      );
+
       if (existingUser) {
-        showError('Email em Uso', 'Este email já está cadastrado. Faça login ou use outro email.');
-        throw new Error('Email já cadastrado');
+        showError(
+          "Email em Uso",
+          "Este email já está cadastrado. Faça login ou use outro email."
+        );
+        throw new Error("Email já cadastrado");
       }
 
       // Validar nome
       if (credentials.name.trim().length < 3) {
-        showError('Nome Inválido', 'O nome deve ter pelo menos 3 caracteres.');
-        throw new Error('Nome muito curto');
+        showError("Nome Inválido", "O nome deve ter pelo menos 3 caracteres.");
+        throw new Error("Nome muito curto");
       }
 
       // Criar novo usuário
@@ -242,21 +299,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         name: credentials.name.trim(),
         email: credentials.email.toLowerCase(),
         password: credentials.password,
-        role: 'user',
+        role: "user",
         createdAt: new Date().toISOString(),
       });
 
       const { password, ...userWithoutPassword } = newUser;
       setUser(userWithoutPassword);
-      sessionStorage.setItem('user', JSON.stringify(userWithoutPassword));
-      
-      success('Cadastro Realizado', `Bem-vindo ao Mimir, ${newUser.name}!`);
-      info('Dica', 'Complete seu perfil para ter acesso a todos os recursos.');
-      
+      sessionStorage.setItem("user", JSON.stringify(userWithoutPassword));
+
+      success("Cadastro Realizado", `Bem-vindo ao Mimir, ${newUser.name}!`);
+      info("Dica", "Complete seu perfil para ter acesso a todos os recursos.");
+
+      console.log("Registration completed successfully");
       return { success: true };
     } catch (error) {
+      console.error("Registration error in AuthContext:", error);
       throw error;
     } finally {
+      console.log("Setting loading to false");
       setLoading(false);
     }
   };
@@ -264,81 +324,90 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     const userName = user?.name;
     setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('rememberMe');
-    sessionStorage.removeItem('user');
-    success('Logout Realizado', userName ? `Até logo, ${userName}!` : 'Você saiu da sua conta.');
+    localStorage.removeItem("user");
+    localStorage.removeItem("rememberMe");
+    sessionStorage.removeItem("user");
+    success(
+      "Logout Realizado",
+      userName ? `Até logo, ${userName}!` : "Você saiu da sua conta."
+    );
   };
 
   const updateProfile = async (updates: Partial<User>) => {
     if (!user) {
-      showError('Erro', 'Usuário não autenticado');
-      throw new Error('Não autenticado');
+      showError("Erro", "Usuário não autenticado");
+      throw new Error("Não autenticado");
     }
 
     try {
       setLoading(true);
-      
+
       // Atualizar usuário no banco
       const updatedUser = await databaseService.updateUser(user.id, updates);
       const { password, ...userWithoutPassword } = updatedUser;
-      
+
       setUser(userWithoutPassword);
-      
+
       // Atualizar storage
-      const rememberMe = localStorage.getItem('rememberMe') === 'true';
+      const rememberMe = localStorage.getItem("rememberMe") === "true";
       if (rememberMe) {
-        localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+        localStorage.setItem("user", JSON.stringify(userWithoutPassword));
       } else {
-        sessionStorage.setItem('user', JSON.stringify(userWithoutPassword));
+        sessionStorage.setItem("user", JSON.stringify(userWithoutPassword));
       }
-      
-      success('Perfil Atualizado', 'Suas informações foram atualizadas com sucesso.');
+
+      success(
+        "Perfil Atualizado",
+        "Suas informações foram atualizadas com sucesso."
+      );
       return { success: true };
     } catch (error) {
-      showError('Erro', 'Não foi possível atualizar o perfil.');
+      showError("Erro", "Não foi possível atualizar o perfil.");
       throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  const changePassword = async (currentPassword: string, newPassword: string) => {
+  const changePassword = async (
+    currentPassword: string,
+    newPassword: string
+  ) => {
     if (!user) {
-      showError('Erro', 'Usuário não autenticado');
-      throw new Error('Não autenticado');
+      showError("Erro", "Usuário não autenticado");
+      throw new Error("Não autenticado");
     }
 
     try {
       setLoading(true);
-      
+
       // Buscar usuário completo para verificar senha atual
       const users = await databaseService.getUsers();
-      const fullUser = users.find(u => u.id === user.id);
-      
+      const fullUser = users.find((u) => u.id === user.id);
+
       if (!fullUser || fullUser.password !== currentPassword) {
-        showError('Senha Incorreta', 'A senha atual está incorreta.');
-        throw new Error('Senha atual incorreta');
+        showError("Senha Incorreta", "A senha atual está incorreta.");
+        throw new Error("Senha atual incorreta");
       }
 
       // Validar nova senha
       const passwordValidation = validatePasswordStrength(newPassword);
       if (!passwordValidation.isValid) {
-        showError('Senha Fraca', passwordValidation.message!);
+        showError("Senha Fraca", passwordValidation.message!);
         throw new Error(passwordValidation.message);
       }
 
       // Atualizar senha
       await databaseService.updateUser(user.id, { password: newPassword });
-      
-      success('Senha Alterada', 'Sua senha foi alterada com sucesso.');
-      info('Segurança', 'Por segurança, faça login novamente.');
-      
+
+      success("Senha Alterada", "Sua senha foi alterada com sucesso.");
+      info("Segurança", "Por segurança, faça login novamente.");
+
       // Fazer logout após trocar senha
       setTimeout(() => {
         logout();
       }, 2000);
-      
+
       return { success: true };
     } catch (error) {
       throw error;
@@ -361,6 +430,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   return (
     <AuthContext.Provider value={value}>
       {children}
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </AuthContext.Provider>
   );
 };

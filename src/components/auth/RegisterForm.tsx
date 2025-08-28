@@ -204,32 +204,39 @@ export const RegisterForm: React.FC = () => {
   const { register: registerUser, loading } = useAuth();
   const navigate = useNavigate();
 
+  console.log("RegisterForm render - loading:", loading);
+
   const {
     register,
     handleSubmit,
     watch,
-    formState: { errors },
+    formState: { errors, isValid },
     reset,
   } = useForm<RegisterFormData>();
+
+  console.log("Form state - errors:", errors, "isValid:", isValid);
 
   const password = watch("password") || "";
 
   // Limpa o formulário quando o componente é montado
   useEffect(() => {
+    console.log("RegisterForm mounted");
+    console.log("registerUser function:", registerUser);
+    console.log("navigate function:", navigate);
     reset({
       name: "",
       email: "",
       password: "",
       confirmPassword: "",
     });
-  }, [reset]);
+  }, [reset, registerUser, navigate]);
 
   const onSubmit = async (data: RegisterFormData) => {
+    console.log("Form submitted with data:", data);
     try {
-      if (!isPasswordValid(data.password)) {
-        return; // Não submete se a senha não atender aos requisitos
-      }
+      console.log("Calling registerUser");
       await registerUser(data);
+      console.log("Registration successful, navigating to dashboard");
       navigate("/dashboard");
     } catch (error) {
       console.error("Register error:", error);
